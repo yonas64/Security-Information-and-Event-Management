@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AlertTriangle, Clock, CheckCircle, XCircle, Eye } from 'lucide-react';
+import { AlertTriangle, Clock, CheckCircle, XCircle, Eye, Search, ChevronDown, RefreshCw } from 'lucide-react';
 
 interface Alert {
   id: string;
@@ -90,16 +90,43 @@ export function AlertsPage() {
   const [alerts] = useState<Alert[]>(mockAlerts);
   const [selectedAlert, setSelectedAlert] = useState<Alert | null>(null);
   const [statusFilter, setStatusFilter] = useState<'all' | 'open' | 'investigating' | 'resolved'>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<'timestamp' | 'severity'>('timestamp');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
-  const filteredAlerts = alerts.filter(
-    alert => statusFilter === 'all' || alert.status === statusFilter
-  );
+  const filteredAlerts = alerts
+    .filter(
+      (alert: Alert) => 
+        (statusFilter === 'all' || alert.status === statusFilter) &&
+        (searchQuery === '' || 
+          alert.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          alert.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          alert.id.toLowerCase().includes(searchQuery.toLowerCase()))
+    )
+    .sort((a: Alert, b: Alert) => {
+      if (sortBy === 'timestamp') {
+        const dateA = new Date(a.timestamp).getTime();
+        const dateB = new Date(b.timestamp).getTime();
+        return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+      } else {
+        const severityOrder = { critical: 4, high: 3, medium: 2, low: 1 };
+        const severityA = severityOrder[a.severity];
+        const severityB = severityOrder[b.severity];
+        return sortOrder === 'asc' ? severityA - severityB : severityB - severityA;
+      }
+    });
 
-  const getSeverityColor = (severity: string) => {
+  const handleRefresh = () => {
+    setStatusFilter('all');
+    setSearchQuery('');
+    setSortBy('timestamp');
+    setSortOrder('desc');
+    setSelectedAlert(null);
+  };
     switch (severity) {
       case 'critical': return 'bg-[#ef4444] text-white';
       case 'high': return 'bg-[#f59e0b] text-white';
-      case 'medium': return 'bg-[#eab308] text-black';
+      case 'medium': return 'bg-[#eab308] text-white';
       case 'low': return 'bg-[#3b82f6] text-white';
       default: return 'bg-gray-500 text-white';
     }
@@ -136,9 +163,50 @@ export function AlertsPage() {
           <div className="flex items-center gap-2">
             <div className="size-2 rounded-full bg-[#ef4444] animate-pulse" />
             <span className="text-sm text-gray-400">
-              {alerts.filter(a => a.status === 'open').length} Open Alerts
+              {alerts.filter((a: Alert) => a.status === 'open').length} Open Alerts
             </span>
+            <button
+              onClick={handleRefresh}
+              className="ml-4 p-2 text-gray-400 hover:text-white transition-colors"
+              title="Refresh and reset filters"
+            >
+              <RefreshCw className="size-4" />
+            </button>
           </div>
+        </div>
+
+        {/* Search Bar */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 size-4" />
+          <input
+            type="text"
+            placeholder="Search alerts by title, description, or ID..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 bg-[#1a1a24] border border-[#2a2a3a] text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4f46e5] focus:border-transparent"
+          />
+        </div>
+
+        {/* Sort Controls */}
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-400">Sort by:</span>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as 'timestamp' | 'severity')}
+              className="bg-[#1a1a24] border border-[#2a2a3a] text-white px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-[#4f46e5]"
+            >
+              <option value="timestamp">Timestamp</option>
+              <option value="severity">Severity</option>
+            </select>
+          </div>
+          <button
+            onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+            className="flex items-center gap-1 text-sm text-gray-400 hover:text-white"
+          >
+            <ChevronDown className={`size-4 transition-transform ${sortOrder === 'asc' ? 'rotate-180' : ''}`} />
+            {sortOrder === 'asc' ? 'Ascending' : 'Descending'}
+          </button>
         </div>
 
         <div className="flex gap-2">
@@ -160,7 +228,7 @@ export function AlertsPage() {
                 : 'bg-[#1a1a24] text-gray-400 hover:text-white'
             }`}
           >
-            Open ({alerts.filter(a => a.status === 'open').length})
+            Open ({alerts.filter((a: Alert) => a.status === 'open').length})
           </button>
           <button
             onClick={() => setStatusFilter('investigating')}
@@ -170,7 +238,7 @@ export function AlertsPage() {
                 : 'bg-[#1a1a24] text-gray-400 hover:text-white'
             }`}
           >
-            Investigating ({alerts.filter(a => a.status === 'investigating').length})
+            Investigating ({alerts.filter((a: Alert) => a.status === 'investigating').length})
           </button>
           <button
             onClick={() => setStatusFilter('resolved')}
@@ -180,7 +248,7 @@ export function AlertsPage() {
                 : 'bg-[#1a1a24] text-gray-400 hover:text-white'
             }`}
           >
-            Resolved ({alerts.filter(a => a.status === 'resolved').length})
+            Resolved ({alerts.filter((a: Alert) => a.status === 'resolved').length})
           </button>
         </div>
       </div>
@@ -188,12 +256,12 @@ export function AlertsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Alert List */}
         <div className="space-y-4">
-          {filteredAlerts.map((alert) => (
+          {filteredAlerts.map((alert: Alert) => (
             <div
               key={alert.id}
               onClick={() => setSelectedAlert(alert)}
-              className={`bg-[#0f0f17] border border-[#1f1f2e] border-l-4 ${getSeverityBorderColor(alert.severity)} p-6 cursor-pointer hover:border-[#2f2f3e] transition-all ${
-                selectedAlert?.id === alert.id ? 'ring-2 ring-[#4f46e5]' : ''
+              className={`bg-[#0f0f17] border border-[#1f1f2e] border-l-4 ${getSeverityBorderColor(alert.severity)} p-6 cursor-pointer hover:border-[#2f2f3e] hover:shadow-lg transition-all duration-200 transform hover:scale-[1.02] ${
+                selectedAlert?.id === alert.id ? 'ring-2 ring-[#4f46e5] shadow-lg' : ''
               }`}
             >
               <div className="flex items-start justify-between mb-3">
