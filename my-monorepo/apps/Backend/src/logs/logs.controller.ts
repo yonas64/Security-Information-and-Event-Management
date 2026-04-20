@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Post, Query } from '@nestjs/common';
 import { LogsService } from './logs.service';
 import { CreateLogDto } from './log.dto';
 
@@ -14,8 +14,21 @@ export class LogsController {
 
   // GET /api/logs
   @Get()
-  async list() {
-    return this.logsService.list();
+  async list(
+    @Query('limit') limit?: string,
+    @Query('offset') offset?: string,
+    @Query('severity') severity?: string,
+    @Query('source') source?: string,
+    @Query('search') search?: string,
+  ) {
+    const options = {
+      limit: limit ? parseInt(limit, 10) : 100,
+      offset: offset ? parseInt(offset, 10) : 0,
+      severity,
+      source,
+      search,
+    };
+    return this.logsService.list(options);
   }
 
   // DELETE /api/logs

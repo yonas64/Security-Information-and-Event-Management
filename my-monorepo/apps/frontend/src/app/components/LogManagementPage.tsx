@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, Filter, Download, ChevronDown, ChevronRight } from 'lucide-react';
+import { api, LogEntry as ApiLogEntry } from '../../api';
 
 interface LogEntry {
   id: string;
@@ -75,10 +76,58 @@ const mockLogs: LogEntry[] = [
 ];
 
 export function LogManagementPage() {
-  const [logs] = useState<LogEntry[]>(mockLogs);
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedLog, setSelectedLog] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [levelFilter, setLevelFilter] = useState('all');
+  const [sourceFilter, setSourceFilter] = useState('all');
+  const [timeRange, setTimeRange] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalLogs, setTotalLogs] = useState(0);
+
+  const fetchLogs = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const params: any = {
+        limit: 50,
+        offset: (currentPage - 1) * 50,
+      };
+      if (levelFilter !== 'all') {
+        params.severity = levelFilter;
+      }
+      if (sourceFilter !== 'all') {
+        params.source = sourceFilter;
+      }
+      if (searchQuery.trim()) {
+        params.search = searchQuery.trim();
+      }
+      const response = await api.getLogs(params);
+      const mappedLogs: LogEntry[] = response.logs.map((log: ApiLogEntry) => ({
+        id: log._id,
+        timestamp: new Date(log.timestamp).toISOString().replace('T', ' ').slice(0, -5),
+        level: log.severity as 'INFO' | 'WARN' | 'ERROR' | 'DEBUG',
+        source: log.source,
+        message: log.event,
+        details: log.payload || {},
+      }));
+      setLogs(mappedLogs);
+      setTotalLogs(response.total);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch logs');
+      // Fallback to mock data if API fails
+      setLogs(mockLogs);
+      setTotalLogs(mockLogs.length);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchLogs();
+  }, [currentPage, levelFilter, sourceFilter, searchQuery]);
 
   const getLevelColor = (level: string) => {
     switch (level) {
@@ -130,7 +179,10 @@ export function LogManagementPage() {
 
           {/* Actions */}
           <div className="flex items-end gap-2">
-            <button className="flex-1 bg-[#4f46e5] hover:bg-[#4338ca] text-white px-4 py-2 text-sm flex items-center justify-center gap-2">
+            <button
+              onClick={fetchLogs}
+              className="flex-1 bg-[#4f46e5] hover:bg-[#4338ca] text-white px-4 py-2 text-sm flex items-center justify-center gap-2"
+            >
               <Filter className="size-4" />
               Filter
             </button>
@@ -144,21 +196,30 @@ export function LogManagementPage() {
         <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm text-gray-400 mb-2">Time Range</label>
-            <select className="w-full bg-[#1a1a24] border border-[#2a2a3a] px-3 py-2 text-sm text-white">
-              <option>Last 1 hour</option>
-              <option>Last 24 hours</option>
-              <option>Last 7 days</option>
-              <option>Custom range</option>
+            <select
+              value={timeRange}
+              onChange={(e) => setTimeRange(e.target.value)}
+              className="w-full bg-[#1a1a24] border border-[#2a2a3a] px-3 py-2 text-sm text-white"
+            >
+              <option value="all">All Time</option>
+              <option value="1h">Last 1 hour</option>
+              <option value="24h">Last 24 hours</option>
+              <option value="7d">Last 7 days</option>
             </select>
           </div>
           <div>
             <label className="block text-sm text-gray-400 mb-2">Source</label>
-            <select className="w-full bg-[#1a1a24] border border-[#2a2a3a] px-3 py-2 text-sm text-white">
-              <option>All Sources</option>
-              <option>Firewall</option>
-              <option>IDS/IPS</option>
-              <option>Web Server</option>
-              <option>Database</option>
+            <select
+              value={sourceFilter}
+              onChange={(e) => setSourceFilter(e.target.value)}
+              className="w-full bg-[#1a1a24] border border-[#2a2a3a] px-3 py-2 text-sm text-white"
+            >
+              <option value="all">All Sources</option>
+              <option value="firewall">Firewall</option>
+              <option value="ids-system">IDS/IPS</option>
+              <option value="web-server">Web Server</option>
+              <option value="database">Database</option>
+              <option value="auth-service">Auth Service</option>
             </select>
           </div>
           <div>
@@ -172,21 +233,34 @@ export function LogManagementPage() {
         </div>
       </div>
 
+      {/* Error Message */}
+      {error && (
+        <div className="bg-red-900/20 border border-red-500/50 p-4">
+          <p className="text-red-400">{error}</p>
+        </div>
+      )}
+
       {/* Log Results */}
       <div className="bg-[#0f0f17] border border-[#1f1f2e]">
         <div className="border-b border-[#1f1f2e] px-6 py-4">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-medium text-white">
-              Log Entries ({logs.length.toLocaleString()} results)
+              Log Entries {loading ? '(Loading...)' : `(${totalLogs.toLocaleString()} results)`}
             </h3>
             <div className="text-sm text-gray-400">
-              Showing 1-{logs.length} of 1,247,892
+              {loading ? 'Loading...' : `Showing ${logs.length} of ${totalLogs}`}
             </div>
           </div>
         </div>
 
-        <div className="divide-y divide-[#1f1f2e]">
-          {logs.map((log) => (
+        {loading ? (
+          <div className="px-6 py-8 text-center">
+            <p className="text-gray-400">Loading logs...</p>
+          </div>
+        ) : (
+          <>
+            <div className="divide-y divide-[#1f1f2e]">
+              {logs.map((log) => (
             <div key={log.id} className="hover:bg-[#1a1a24] transition-colors">
               <div
                 className="px-6 py-4 cursor-pointer"
@@ -231,26 +305,32 @@ export function LogManagementPage() {
               )}
             </div>
           ))}
-        </div>
-
-        {/* Pagination */}
-        <div className="border-t border-[#1f1f2e] px-6 py-4">
-          <div className="flex items-center justify-between">
-            <button className="px-4 py-2 bg-[#1a1a24] hover:bg-[#2a2a3a] border border-[#2a2a3a] text-white text-sm">
-              Previous
-            </button>
-            <div className="flex items-center gap-2">
-              <button className="size-8 bg-[#4f46e5] text-white text-sm">1</button>
-              <button className="size-8 hover:bg-[#1a1a24] text-white text-sm">2</button>
-              <button className="size-8 hover:bg-[#1a1a24] text-white text-sm">3</button>
-              <span className="text-gray-500 text-sm">...</span>
-              <button className="size-8 hover:bg-[#1a1a24] text-white text-sm">124</button>
             </div>
-            <button className="px-4 py-2 bg-[#1a1a24] hover:bg-[#2a2a3a] border border-[#2a2a3a] text-white text-sm">
-              Next
-            </button>
-          </div>
-        </div>
+
+            {/* Pagination */}
+            <div className="border-t border-[#1f1f2e] px-6 py-4">
+              <div className="flex items-center justify-between">
+                <button
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 bg-[#1a1a24] hover:bg-[#2a2a3a] disabled:opacity-50 disabled:cursor-not-allowed border border-[#2a2a3a] text-white text-sm"
+                >
+                  Previous
+                </button>
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-400 text-sm">Page {currentPage}</span>
+                </div>
+                <button
+                  onClick={() => setCurrentPage(currentPage + 1)}
+                  disabled={logs.length < 50}
+                  className="px-4 py-2 bg-[#1a1a24] hover:bg-[#2a2a3a] disabled:opacity-50 disabled:cursor-not-allowed border border-[#2a2a3a] text-white text-sm"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

@@ -87,33 +87,29 @@ const mockAlerts: Alert[] = [
 ];
 
 export function AlertsPage() {
-  const [alerts] = useState<Alert[]>(mockAlerts);
   const [selectedAlert, setSelectedAlert] = useState<Alert | null>(null);
-  const [statusFilter, setStatusFilter] = useState<'all' | 'open' | 'investigating' | 'resolved'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | Alert['status']>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'timestamp' | 'severity'>('timestamp');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
-  const filteredAlerts = alerts
-    .filter(
-      (alert: Alert) => 
-        (statusFilter === 'all' || alert.status === statusFilter) &&
-        (searchQuery === '' || 
-          alert.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          alert.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          alert.id.toLowerCase().includes(searchQuery.toLowerCase()))
+  const filteredAlerts = mockAlerts
+    .filter((alert) =>
+      (statusFilter === 'all' || alert.status === statusFilter) &&
+      (searchQuery === '' ||
+        alert.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        alert.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        alert.id.toLowerCase().includes(searchQuery.toLowerCase()))
     )
-    .sort((a: Alert, b: Alert) => {
+    .sort((a, b) => {
       if (sortBy === 'timestamp') {
         const dateA = new Date(a.timestamp).getTime();
         const dateB = new Date(b.timestamp).getTime();
         return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
-      } else {
-        const severityOrder = { critical: 4, high: 3, medium: 2, low: 1 };
-        const severityA = severityOrder[a.severity];
-        const severityB = severityOrder[b.severity];
-        return sortOrder === 'asc' ? severityA - severityB : severityB - severityA;
       }
+      return sortOrder === 'asc'
+        ? severityOrder[a.severity] - severityOrder[b.severity]
+        : severityOrder[b.severity] - severityOrder[a.severity];
     });
 
   const handleRefresh = () => {
@@ -123,239 +119,225 @@ export function AlertsPage() {
     setSortOrder('desc');
     setSelectedAlert(null);
   };
+
+  const severityOrder: Record<Alert['severity'], number> = {
+    critical: 4,
+    high: 3,
+    medium: 2,
+    low: 1,
+  };
+
+  const getSeverityColor = (severity: Alert['severity']) => {
     switch (severity) {
-      case 'critical': return 'bg-[#ef4444] text-white';
-      case 'high': return 'bg-[#f59e0b] text-white';
-      case 'medium': return 'bg-[#eab308] text-white';
-      case 'low': return 'bg-[#3b82f6] text-white';
-      default: return 'bg-gray-500 text-white';
+      case 'critical':
+        return 'bg-[#ef4444] text-white';
+      case 'high':
+        return 'bg-[#f59e0b] text-white';
+      case 'medium':
+        return 'bg-[#eab308] text-white';
+      default:
+        return 'bg-[#3b82f6] text-white';
     }
   };
 
-  const getSeverityBorderColor = (severity: string) => {
+  const getSeverityBorderColor = (severity: Alert['severity']) => {
     switch (severity) {
-      case 'critical': return 'border-l-[#ef4444]';
-      case 'high': return 'border-l-[#f59e0b]';
-      case 'medium': return 'border-l-[#eab308]';
-      case 'low': return 'border-l-[#3b82f6]';
-      default: return 'border-l-gray-500';
+      case 'critical':
+        return 'border-l-[#ef4444]';
+      case 'high':
+        return 'border-l-[#f59e0b]';
+      case 'medium':
+        return 'border-l-[#eab308]';
+      default:
+        return 'border-l-[#3b82f6]';
     }
   };
 
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (status: Alert['status']) => {
     switch (status) {
-      case 'open': return <XCircle className="size-4 text-[#ef4444]" />;
-      case 'investigating': return <Clock className="size-4 text-[#f59e0b]" />;
-      case 'resolved': return <CheckCircle className="size-4 text-[#10b981]" />;
-      default: return null;
+      case 'open':
+        return <XCircle className="size-4 text-[#ef4444]" />;
+      case 'investigating':
+        return <Clock className="size-4 text-[#f59e0b]" />;
+      case 'resolved':
+        return <CheckCircle className="size-4 text-[#10b981]" />;
+      default:
+        return null;
     }
   };
 
   return (
     <div className="space-y-6">
-      {/* Header and Filters */}
-      <div className="bg-[#0f0f17] border border-[#1f1f2e] p-6">
-        <div className="flex items-center justify-between mb-4">
+      <div className="rounded-3xl border border-[#1f1f2e] bg-[#0f0f17] p-6 shadow-sm">
+        <div className="mb-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <h2 className="text-xl font-medium text-white">Security Alerts</h2>
-            <p className="text-sm text-gray-400 mt-1">Monitor and manage security incidents</p>
+            <h2 className="text-xl font-semibold text-white">Security Alerts</h2>
+            <p className="mt-1 text-sm text-gray-400">Monitor and manage security incidents.</p>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="size-2 rounded-full bg-[#ef4444] animate-pulse" />
-            <span className="text-sm text-gray-400">
-              {alerts.filter((a: Alert) => a.status === 'open').length} Open Alerts
+          <div className="flex items-center gap-3">
+            <span className="flex items-center gap-2 text-sm text-gray-400">
+              <span className="h-2 w-2 rounded-full bg-[#ef4444] animate-pulse" />
+              {mockAlerts.filter((alert) => alert.status === 'open').length} Open Alerts
             </span>
             <button
+              type="button"
               onClick={handleRefresh}
-              className="ml-4 p-2 text-gray-400 hover:text-white transition-colors"
-              title="Refresh and reset filters"
+              className="rounded-2xl border border-[#2a2a3a] bg-[#1a1a24] p-2 text-gray-400 transition hover:border-[#4f46e5] hover:text-white"
+              title="Reset filters"
             >
               <RefreshCw className="size-4" />
             </button>
           </div>
         </div>
 
-        {/* Search Bar */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 size-4" />
-          <input
-            type="text"
-            placeholder="Search alerts by title, description, or ID..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-[#1a1a24] border border-[#2a2a3a] text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4f46e5] focus:border-transparent"
-          />
-        </div>
+        <div className="grid gap-4 lg:grid-cols-2">
+          <label className="relative block">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search alerts by title, description, or ID..."
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              className="w-full rounded-2xl border border-[#2a2a3a] bg-[#1a1a24] py-2 pl-10 pr-4 text-sm text-white outline-none transition focus:border-[#4f46e5] focus:ring-2 focus:ring-[#4f46e5]/30"
+            />
+          </label>
 
-        {/* Sort Controls */}
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-400">Sort by:</span>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as 'timestamp' | 'severity')}
-              className="bg-[#1a1a24] border border-[#2a2a3a] text-white px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-[#4f46e5]"
+          <div className="flex flex-wrap items-center gap-3 justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-400">Sort by:</span>
+              <select
+                value={sortBy}
+                onChange={(event) => setSortBy(event.target.value as 'timestamp' | 'severity')}
+                className="rounded-2xl border border-[#2a2a3a] bg-[#1a1a24] px-3 py-2 text-sm text-white outline-none transition focus:border-[#4f46e5] focus:ring-2 focus:ring-[#4f46e5]/30"
+              >
+                <option value="timestamp">Timestamp</option>
+                <option value="severity">Severity</option>
+              </select>
+            </div>
+            <button
+              type="button"
+              onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+              className="flex items-center gap-2 rounded-2xl border border-[#2a2a3a] bg-[#1a1a24] px-3 py-2 text-sm text-gray-300 transition hover:border-[#4f46e5] hover:text-white"
             >
-              <option value="timestamp">Timestamp</option>
-              <option value="severity">Severity</option>
-            </select>
+              <ChevronDown className={`size-4 transition-transform ${sortOrder === 'asc' ? 'rotate-180' : ''}`} />
+              {sortOrder === 'asc' ? 'Ascending' : 'Descending'}
+            </button>
           </div>
-          <button
-            onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-            className="flex items-center gap-1 text-sm text-gray-400 hover:text-white"
-          >
-            <ChevronDown className={`size-4 transition-transform ${sortOrder === 'asc' ? 'rotate-180' : ''}`} />
-            {sortOrder === 'asc' ? 'Ascending' : 'Descending'}
-          </button>
         </div>
 
-        <div className="flex gap-2">
-          <button
-            onClick={() => setStatusFilter('all')}
-            className={`px-4 py-2 text-sm ${
-              statusFilter === 'all'
-                ? 'bg-[#4f46e5] text-white'
-                : 'bg-[#1a1a24] text-gray-400 hover:text-white'
-            }`}
-          >
-            All ({alerts.length})
-          </button>
-          <button
-            onClick={() => setStatusFilter('open')}
-            className={`px-4 py-2 text-sm ${
-              statusFilter === 'open'
-                ? 'bg-[#4f46e5] text-white'
-                : 'bg-[#1a1a24] text-gray-400 hover:text-white'
-            }`}
-          >
-            Open ({alerts.filter((a: Alert) => a.status === 'open').length})
-          </button>
-          <button
-            onClick={() => setStatusFilter('investigating')}
-            className={`px-4 py-2 text-sm ${
-              statusFilter === 'investigating'
-                ? 'bg-[#4f46e5] text-white'
-                : 'bg-[#1a1a24] text-gray-400 hover:text-white'
-            }`}
-          >
-            Investigating ({alerts.filter((a: Alert) => a.status === 'investigating').length})
-          </button>
-          <button
-            onClick={() => setStatusFilter('resolved')}
-            className={`px-4 py-2 text-sm ${
-              statusFilter === 'resolved'
-                ? 'bg-[#4f46e5] text-white'
-                : 'bg-[#1a1a24] text-gray-400 hover:text-white'
-            }`}
-          >
-            Resolved ({alerts.filter((a: Alert) => a.status === 'resolved').length})
-          </button>
+        <div className="mt-4 flex flex-wrap gap-2">
+          {(['all', 'open', 'investigating', 'resolved'] as const).map((filter) => {
+            const count = filter === 'all' ? mockAlerts.length : mockAlerts.filter((alert) => alert.status === filter).length;
+            return (
+              <button
+                key={filter}
+                type="button"
+                onClick={() => setStatusFilter(filter)}
+                className={`rounded-2xl px-4 py-2 text-sm transition ${
+                  statusFilter === filter ? 'bg-[#4f46e5] text-white' : 'bg-[#1a1a24] text-gray-400 hover:text-white'
+                }`}
+              >
+                {filter === 'all' ? 'All' : filter.charAt(0).toUpperCase() + filter.slice(1)} ({count})
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Alert List */}
+      <div className="grid gap-6 lg:grid-cols-2">
         <div className="space-y-4">
-          {filteredAlerts.map((alert: Alert) => (
-            <div
+          {filteredAlerts.map((alert) => (
+            <article
               key={alert.id}
               onClick={() => setSelectedAlert(alert)}
-              className={`bg-[#0f0f17] border border-[#1f1f2e] border-l-4 ${getSeverityBorderColor(alert.severity)} p-6 cursor-pointer hover:border-[#2f2f3e] hover:shadow-lg transition-all duration-200 transform hover:scale-[1.02] ${
-                selectedAlert?.id === alert.id ? 'ring-2 ring-[#4f46e5] shadow-lg' : ''
+              className={`rounded-2xl border border-[#1f1f2e] border-l-4 bg-[#0f0f17] p-6 shadow-sm transition duration-200 hover:shadow-lg ${getSeverityBorderColor(alert.severity)} ${
+                selectedAlert?.id === alert.id ? 'ring-2 ring-[#4f46e5]' : ''
               }`}
             >
-              <div className="flex items-start justify-between mb-3">
+              <div className="flex items-start justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <AlertTriangle className="size-5 text-[#ef4444]" />
                   <div>
-                    <h3 className="text-white font-medium">{alert.title}</h3>
+                    <h3 className="text-white font-semibold">{alert.title}</h3>
                     <p className="text-xs text-gray-500 font-mono mt-1">{alert.id}</p>
                   </div>
                 </div>
-                <span className={`text-xs font-medium px-2 py-1 uppercase ${getSeverityColor(alert.severity)}`}>
+                <span className={`rounded-full px-2 py-1 text-xs font-semibold uppercase ${getSeverityColor(alert.severity)}`}>
                   {alert.severity}
                 </span>
               </div>
 
-              <p className="text-sm text-gray-400 mb-3 line-clamp-2">
-                {alert.description}
-              </p>
+              <p className="mt-4 text-sm leading-6 text-gray-400 line-clamp-2">{alert.description}</p>
 
-              <div className="flex items-center justify-between text-xs">
-                <div className="flex items-center gap-4">
-                  <span className="text-gray-500 font-mono">{alert.timestamp}</span>
-                  <div className="flex items-center gap-1">
-                    {getStatusIcon(alert.status)}
-                    <span className="text-gray-400 capitalize">{alert.status}</span>
-                  </div>
+              <div className="mt-5 flex flex-wrap items-center justify-between gap-3 text-xs text-gray-400">
+                <span className="font-mono">{alert.timestamp}</span>
+                <div className="flex items-center gap-2">
+                  {getStatusIcon(alert.status)}
+                  <span className="capitalize">{alert.status}</span>
                 </div>
-                <button className="text-[#4f46e5] hover:text-[#6366f1] flex items-center gap-1">
+                <button className="inline-flex items-center gap-1 text-[#4f46e5] transition hover:text-[#6366f1]">
                   <Eye className="size-3" />
                   View
                 </button>
               </div>
-            </div>
+            </article>
           ))}
         </div>
 
-        {/* Alert Details Panel */}
-        <div className="lg:sticky lg:top-6 h-fit">
+        <div className="lg:sticky lg:top-6">
           {selectedAlert ? (
-            <div className="bg-[#0f0f17] border border-[#1f1f2e] p-6">
-              <div className="flex items-start justify-between mb-6">
+            <div className="rounded-2xl border border-[#1f1f2e] bg-[#0f0f17] p-6 shadow-sm">
+              <div className="mb-6 flex items-start justify-between gap-4">
                 <div>
-                  <h3 className="text-xl text-white font-medium mb-2">{selectedAlert.title}</h3>
-                  <p className="text-sm text-gray-400 font-mono">{selectedAlert.id}</p>
+                  <h3 className="text-xl font-semibold text-white">{selectedAlert.title}</h3>
+                  <p className="text-sm text-gray-400 font-mono mt-1">{selectedAlert.id}</p>
                 </div>
-                <span className={`text-xs font-medium px-3 py-1.5 uppercase ${getSeverityColor(selectedAlert.severity)}`}>
+                <span className={`rounded-full px-3 py-1.5 text-xs font-semibold uppercase ${getSeverityColor(selectedAlert.severity)}`}>
                   {selectedAlert.severity}
                 </span>
               </div>
 
-              {/* Anomaly Detection Indicator */}
-              <div className="bg-[#1a1a24] border border-[#f59e0b] p-4 mb-6">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="size-2 rounded-full bg-[#f59e0b] animate-pulse" />
+              <div className="mb-6 rounded-3xl border border-[#f59e0b] bg-[#1a1a24] p-4">
+                <div className="mb-2 flex items-center gap-2">
+                  <span className="h-2.5 w-2.5 rounded-full bg-[#f59e0b] animate-pulse" />
                   <span className="text-sm font-medium text-[#f59e0b]">Anomaly Detected</span>
                 </div>
-                <p className="text-xs text-gray-400">
-                  Pattern matching confidence: 94.7% | Risk score: High
-                </p>
+                <p className="text-xs text-gray-400">Pattern matching confidence: 94.7% | Risk score: High</p>
               </div>
 
-              <div className="space-y-6">
+              <div className="space-y-6 text-sm text-gray-400">
                 <div>
-                  <h4 className="text-sm font-medium text-white mb-2">Description</h4>
-                  <p className="text-sm text-gray-400">{selectedAlert.description}</p>
+                  <h4 className="mb-2 text-sm font-semibold text-white">Description</h4>
+                  <p>{selectedAlert.description}</p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-4 sm:grid-cols-2">
                   <div>
-                    <h4 className="text-sm font-medium text-white mb-2">Source IP</h4>
-                    <p className="text-sm text-gray-400 font-mono">{selectedAlert.sourceIp}</p>
+                    <p className="mb-2 text-sm font-semibold text-white">Source IP</p>
+                    <p className="font-mono text-sm text-gray-400">{selectedAlert.sourceIp}</p>
                   </div>
                   <div>
-                    <h4 className="text-sm font-medium text-white mb-2">Target IP</h4>
-                    <p className="text-sm text-gray-400 font-mono">{selectedAlert.targetIp}</p>
+                    <p className="mb-2 text-sm font-semibold text-white">Target IP</p>
+                    <p className="font-mono text-sm text-gray-400">{selectedAlert.targetIp}</p>
                   </div>
                   <div>
-                    <h4 className="text-sm font-medium text-white mb-2">Detected By</h4>
-                    <p className="text-sm text-gray-400">{selectedAlert.detectedBy}</p>
+                    <p className="mb-2 text-sm font-semibold text-white">Detected By</p>
+                    <p>{selectedAlert.detectedBy}</p>
                   </div>
                   <div>
-                    <h4 className="text-sm font-medium text-white mb-2">Status</h4>
+                    <p className="mb-2 text-sm font-semibold text-white">Status</p>
                     <div className="flex items-center gap-2">
                       {getStatusIcon(selectedAlert.status)}
-                      <span className="text-sm text-gray-400 capitalize">{selectedAlert.status}</span>
+                      <span className="capitalize text-gray-400">{selectedAlert.status}</span>
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <h4 className="text-sm font-medium text-white mb-2">Affected Assets</h4>
+                  <p className="mb-2 text-sm font-semibold text-white">Affected Assets</p>
                   <div className="flex flex-wrap gap-2">
-                    {selectedAlert.affectedAssets.map((asset, idx) => (
-                      <span key={idx} className="bg-[#1a1a24] border border-[#2a2a3a] px-2 py-1 text-xs text-gray-400 font-mono">
+                    {selectedAlert.affectedAssets.map((asset, index) => (
+                      <span key={index} className="rounded-2xl border border-[#2a2a3a] bg-[#1a1a24] px-2 py-1 text-xs text-gray-400 font-mono">
                         {asset}
                       </span>
                     ))}
@@ -363,31 +345,27 @@ export function AlertsPage() {
                 </div>
 
                 <div>
-                  <h4 className="text-sm font-medium text-white mb-2">Recommendations</h4>
+                  <p className="mb-2 text-sm font-semibold text-white">Recommendations</p>
                   <ul className="space-y-2">
-                    {selectedAlert.recommendations.map((rec, idx) => (
-                      <li key={idx} className="text-sm text-gray-400 flex items-start gap-2">
-                        <span className="text-[#4f46e5] mt-1">•</span>
-                        {rec}
+                    {selectedAlert.recommendations.map((recommendation, index) => (
+                      <li key={index} className="flex gap-2">
+                        <span className="mt-1 text-[#4f46e5]">•</span>
+                        <span>{recommendation}</span>
                       </li>
                     ))}
                   </ul>
                 </div>
 
-                <div className="flex gap-2 pt-4 border-t border-[#1f1f2e]">
-                  <button className="flex-1 bg-[#4f46e5] hover:bg-[#4338ca] text-white px-4 py-2 text-sm">
-                    Take Action
-                  </button>
-                  <button className="flex-1 bg-[#1a1a24] hover:bg-[#2a2a3a] border border-[#2a2a3a] text-white px-4 py-2 text-sm">
-                    Mark Resolved
-                  </button>
+                <div className="grid gap-3 pt-4 border-t border-[#1f1f2e] sm:grid-cols-2">
+                  <button className="rounded-2xl bg-[#4f46e5] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#4338ca]">Take Action</button>
+                  <button className="rounded-2xl border border-[#2a2a3a] bg-[#1a1a24] px-4 py-3 text-sm font-semibold text-white transition hover:border-[#4f46e5] hover:text-white">Mark Resolved</button>
                 </div>
               </div>
             </div>
           ) : (
-            <div className="bg-[#0f0f17] border border-[#1f1f2e] p-12 text-center">
-              <AlertTriangle className="size-12 text-gray-600 mx-auto mb-4" />
-              <p className="text-gray-400">Select an alert to view details</p>
+            <div className="rounded-2xl border border-[#1f1f2e] bg-[#0f0f17] p-12 text-center text-gray-400">
+              <AlertTriangle className="size-12 mx-auto mb-4 text-gray-600" />
+              <p>Select an alert to view details</p>
             </div>
           )}
         </div>

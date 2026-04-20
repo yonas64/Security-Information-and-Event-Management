@@ -26,8 +26,41 @@ export class LogsService {
     return Array.isArray(created) ? created : createdLogs[0];
   }
 
-  async list(): Promise<Log[]> {
-    return this.logModel.find().sort({ timestamp: -1 }).limit(100).exec();
+  async list(options: {
+    limit: number;
+    offset: number;
+    severity?: string;
+    source?: string;
+    search?: string;
+  }): Promise<{ logs: Log[]; total: number }> {
+    const { limit, offset, severity, source, search } = options;
+    const query: any = {};
+
+    if (severity) {
+      query.severity = severity;
+    }
+    if (source) {
+      query.source = source;
+    }
+    if (search) {
+      query.$or = [
+        { event: { $regex: search, $options: 'i' } },
+        { source: { $regex: search, $options: 'i' } },
+        { user: { $regex: search, $options: 'i' } },
+      ];
+    }
+
+    const [logs, total] = await Promise.all([
+      this.logModel
+        .find(query)
+        .sort({ timestamp: -1 })
+        .skip(offset)
+        .limit(limit)
+        .exec(),
+      this.logModel.countDocuments(query).exec(),
+    ]);
+
+    return { logs, total };
   }
 
   // Clear all logs from the database
