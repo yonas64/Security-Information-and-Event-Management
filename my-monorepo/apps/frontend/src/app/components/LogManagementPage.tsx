@@ -29,7 +29,7 @@ const mockLogs: LogEntry[] = [
     timestamp: '2026-02-18 14:32:43.122',
     level: 'INFO',
     source: 'firewall',
-    message: 'Connection established from trusted IP',
+    message: 'Connection  from trusted IP',
     details: {
       ip: '10.0.1.45',
       port: 443,
@@ -38,7 +38,7 @@ const mockLogs: LogEntry[] = [
   },
   {
     id: '3',
-    timestamp: '2026-02-18 14:32:41.567',
+    timestamp: '2026-02-18 14:32:4991.567',
     level: 'WARN',
     source: 'ids-system',
     message: 'Suspicious pattern detected in HTTP request',
@@ -50,15 +50,15 @@ const mockLogs: LogEntry[] = [
   },
   {
     id: '4',
-    timestamp: '2026-02-18 14:32:39.890',
+    timestamp: '2026-02-18 14:32:3.890',
     level: 'INFO',
     source: 'web-server',
     message: 'GET /api/users 200 OK',
     details: {
       method: 'GET',
       path: '/api/users',
-      status: 200,
-      duration: '23ms',
+      status: 400,
+      duration: '236ms',
     },
   },
   {
@@ -70,7 +70,7 @@ const mockLogs: LogEntry[] = [
     details: {
       query: 'SELECT * FROM logs WHERE timestamp > ?',
       duration: '12ms',
-      rows: 1247,
+      rows: 1289798,
     },
   },
 ];
