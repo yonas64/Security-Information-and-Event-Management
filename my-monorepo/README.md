@@ -1,159 +1,109 @@
-# Turborepo starter
+📦 Monorepo E-commerce Project
 
-This Turborepo starter is maintained by the Turborepo core team.
+A simple monorepo-based e-commerce system built using Turborepo, featuring reusable UI components, utility functions, and two core features: Authentication and Product Search.
 
-## Using this example
+🧱 Project Structure
+my-monorepo/
+│
+├── apps/
+│   └── web/                # Main frontend application (Next.js or React)
+│
+├── packages/
+│   ├── ui/                # Reusable UI components
+│   │   ├── button.tsx
+│   │   ├── input.tsx
+│   │   ├── card.tsx
+│   │   └── product-card.tsx
+│   │
+│   ├── utils/             # Shared utility functions
+│   │   ├── cart.ts
+│   │   ├── search.ts
+│   │   ├── total.ts
+│   │   └── formatPrice.ts
+│   │
+│   ├── feature-x/        # Authentication feature
+│   │   └── auth.tsx
+            search.tsx
+│   │
+│
+│
+├── turbo.json             # Turborepo configuration
+├── package.json           # Root workspace config
+└── README.md
+⚙️ Tech Stack
+Monorepo Tool: Turborepo
+Frontend: React / Next.js
+Language: TypeScript
+Styling: Inline styles (can be upgraded to Tailwind)
+Architecture: Component-based + reusable packages
+🚀 Features
+🔐 Authentication (feature-x)
+Login form
+Register form toggle
+Uses shared UI components (Input, Button, Card)
+🔍 Product Search (feature-y)
+Search products by name
+Real-time filtering
+Uses shared utility functions
+🧩 Shared Packages
+ui → reusable UI components
+utils → shared business logic (search, cart, formatting)
+📥 Installation
+1. Clone the repository
+git clone <your-repo-url>
+cd my-monorepo
+2. Install dependencies
+npm install
 
-Run the following command:
+Turborepo will automatically link all workspace packages.
 
-```sh
-npx create-turbo@latest
-```
+▶️ Running the Project
+Start development server
+npm run dev
 
-## What's inside?
+This will run the main app in apps/web.
 
-This Turborepo includes the following packages/apps:
+🏗️ Build Project
 
-### Apps and Packages
+To build all packages:
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+npm run build
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+Turborepo will:
 
-### Utilities
+Build shared packages first
+Then build the web application
+📦 How Packages Work Together
+Example usage:
+import { Button, Input } from 'ui';
+import { searchProducts } from 'utils';
+import { Auth } from 'feature-x';
+import { SearchFeature } from 'feature-y';
 
-This Turborepo has some additional tools already setup for you:
+Each feature is composed using shared UI and utility packages, demonstrating reusability and modular architecture.
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
+🧠 Key Learning Outcomes
 
-### Build
+This project demonstrates:
 
-To build all apps and packages, run the following command:
+Monorepo architecture using Turborepo
+Code reusability across packages
+Separation of concerns
+Scalable frontend architecture
+Component-driven development
+📌 Notes
+This project is intentionally simple for educational purposes.
+No backend or database is required.
+Authentication is UI-based (mock logic).
+Can be extended into a full MERN system.
+👨‍💻 Author
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
+Built as part of a Monorepo System Development Assignment
+Focused on modular design, reusable components, and clean architecture.
 
-```sh
-cd my-turborepo
-turbo build
-```
-
-Without global `turbo`, use your package manager:
-
-```sh
-cd my-turborepo
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
-```
-
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo build --filter=docs
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
-
-### Develop
-
-To develop all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo dev
-```
-
-Without global `turbo`, use your package manager:
-
-```sh
-cd my-turborepo
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
-```
-
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo dev --filter=web
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
-
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo login
-```
-
-Without global `turbo`, use your package manager:
-
-```sh
-cd my-turborepo
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo link
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
+🚀 Optional Improvements (Bonus Ideas)
+Add Tailwind CSS styling
+Add real backend authentication (JWT)
+Add product database (MongoDB)
+Add cart system feature
+Add API layer inside utils
