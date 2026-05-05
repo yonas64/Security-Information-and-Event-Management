@@ -1,8 +1,9 @@
 {
-  "name": "@repo/ui",
+  "name": "ui-components",
   "version": "0.0.0",
   "private": true,
   "exports": {
+    ".": "./src/index.tsx",
     "./*": "./src/*.tsx"
   },
   "scripts": {
@@ -22,5 +23,6 @@
   "dependencies": {
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
-  }
+  },
+  "main": "./src/index.tsx"
 }
