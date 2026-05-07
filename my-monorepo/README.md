@@ -10,6 +10,8 @@ This repository is a monorepo for a simple ecommerce project. It demonstrates ho
 - `packages/utils` — shared utility library
 - `packages/feature-authentication` — authentication feature package
 - `packages/feature-cart` — cart and product feature package
+- `packages/feature-wishlist` — wishlist feature package
+- `packages/feature-checkout` — checkout with coupon support feature package
 
 ## Feature Package Architecture
 
