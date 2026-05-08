@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Input, Button } from 'ui-components';
+import { Input } from 'ui-components';
 import { calculateTotal, formatPrice, applyDiscount, isValidCoupon } from 'utils';
 
 interface CheckoutProps {
@@ -78,12 +78,12 @@ export const CheckoutFeature = ({ cart = defaultCart }: CheckoutProps) => {
 
       <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
         <Input value={coupon} onChange={(e) => setCoupon(e.target.value)} placeholder="Coupon code (e.g. SAVE10)" />
-        <Button onClick={handleApplyCoupon}>Apply</Button>
+        <button onClick={handleApplyCoupon}>Apply</button>
       </div>
       {couponError && <div style={{ color: 'red', marginBottom: 8 }}>{couponError}</div>}
       {appliedCoupon && <div style={{ color: 'green', marginBottom: 8 }}>Coupon applied!</div>}
 
-      <Button onClick={handlePlaceOrder}>Place Order</Button>
+      <button onClick={handlePlaceOrder}>Place Order</button>
     </div>
   );
 };

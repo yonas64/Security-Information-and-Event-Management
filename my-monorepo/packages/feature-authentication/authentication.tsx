@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Input, Button, Card } from 'ui';
+import React, { useState } from 'react';
+import { Input, Card } from 'ui-components';
 
-export const Auth = () => {
+export const Auth: React.FC = () => {
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -17,12 +17,11 @@ export const Auth = () => {
   };
 
   return (
-    <Card>
-      <h2>{mode === 'login' ? 'Login' : 'Register'}</h2>
+    <Card title={mode === 'login' ? 'Login' : 'Register'} href="#">
 
       <Input
         value={email}
-        onChange={(e) => setEmail(e.target.value)}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
         placeholder="Email"
       />
 
@@ -30,15 +29,13 @@ export const Auth = () => {
 
       <Input
         value={password}
-        onChange={(e) => setPassword(e.target.value)}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
         placeholder="Password"
       />
 
       <br />
 
-      <Button onClick={handleSubmit}>
-        {mode === 'login' ? 'Login' : 'Register'}
-      </Button>
+      <button onClick={handleSubmit}>{mode === 'login' ? 'Login' : 'Register'}</button>
 
       <br />
 

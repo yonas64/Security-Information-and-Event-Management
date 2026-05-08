@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { Card, Button, ProductCard } from 'ui-components';
+import React, { useState } from 'react';
+import { Card } from 'ui-components';
 import { addToCart, formatPrice } from 'utils';
 
 const products = [
@@ -14,13 +14,15 @@ export const ProductListFeature = () => {
   const [cart, setCart] = useState<any[]>([]);
 
   return (
-    <Card>
-      <h2>Product Catalog</h2>
+    <Card title="Product Catalog" href="#">
       <div>
         {products.map((product) => (
           <div key={product.id} style={{ marginBottom: 12 }}>
-            <ProductCard name={product.name} price={product.price} />
-            <Button onClick={() => setCart(addToCart(cart, product))}>Add to Cart</Button>
+            <div>
+              <strong>{product.name}</strong>
+              <div>{formatPrice(product.price)}</div>
+            </div>
+            <button onClick={() => setCart(addToCart(cart, product))}>Add to Cart</button>
           </div>
         ))}
       </div>

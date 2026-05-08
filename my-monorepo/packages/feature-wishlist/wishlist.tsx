@@ -1,7 +1,6 @@
 'use client';
 
-import { useState } from 'react';
-import { Button } from 'ui-components';
+import React, { useState } from 'react';
 import { addToWishlist, removeFromWishlist, isInWishlist, formatPrice } from 'utils';
 
 const products = [
@@ -30,9 +29,9 @@ export const WishlistFeature = () => {
         {products.map((product) => (
           <div key={product.id} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
             <span>{product.name} — {formatPrice(product.price)}</span>
-            <Button onClick={() => toggle(product)}>
+            <button onClick={() => toggle(product)}>
               {isInWishlist(wishlist, product.id) ? '♥ Remove' : '♡ Save'}
-            </Button>
+            </button>
           </div>
         ))}
       </div>
